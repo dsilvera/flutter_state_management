@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:get_it/get_it.dart';
 import 'package:state_manager/mobx/models/settings_store.dart';
 import 'package:state_manager/models/color_list_model.dart';
@@ -15,18 +16,20 @@ class _MobXSettingsPageState extends State<MobXSettingsPage> {
     final colorList = ColorListModel();
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: settings.colorSelected.color,
-        title: Text("Settings"),
-      ),
+      appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(kToolbarHeight),
+          child: Observer(
+              builder: (_) => AppBar(
+                    backgroundColor: settings.colorSelected.color,
+                    title: Text("Settings"),
+                  ))),
       body: Center(
         child: CustomScrollView(
           slivers: [
             SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
                 var item = colorList.getByPosition(index);
-                return _MyListItem(
-                    item: item, isSelected: item.color == settings.colorSelected.color);
+                return _MyListItem(item: item);
               }, childCount: colorList.size()),
             ),
           ],
@@ -38,9 +41,8 @@ class _MobXSettingsPageState extends State<MobXSettingsPage> {
 
 class _MyListItem extends StatelessWidget {
   final Item item;
-  final bool isSelected;
 
-  const _MyListItem({Key? key, required this.item, required this.isSelected}) : super(key: key);
+  const _MyListItem({Key? key, required this.item}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -62,13 +64,14 @@ class _MyListItem extends StatelessWidget {
               child: Text(item.name),
             ),
             const SizedBox(width: 24),
-            TextButton(
-              onPressed: () {
-                if (isSelected) return;
-                settings.updateColorSelected(item);
-              },
-              child: Text(isSelected ? "selected" : "Choose"),
-            ),
+            Observer(
+                builder: (_) => TextButton(
+                      onPressed: () {
+                        if (item.color == settings.colorSelected.color) return;
+                        settings.updateColorSelected(item);
+                      },
+                      child: Text(item.color == settings.colorSelected.color ? "selected" : "Choose"),
+                    )),
           ],
         ),
       ),
